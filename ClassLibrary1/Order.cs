@@ -1,68 +1,46 @@
 ﻿/*
  * Programmer: Dechen Deng
- * Date/ 11/25/2024
- * Reversion History: 1.0
- * Plateform: Windows11 Rider
+ * Date: 12/11/2024
+ * Revision History: Final
+ * Platform: Windows11 Rider
  */
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
 namespace OrderClassLibrary
 {
-    /// <summary>
-    /// Represents a customer order that includes details like customer information, 
-    /// purchased items, tax, tariffs, and the total cost of the order.
-    /// </summary>
     public class Order
     {
-        /// <summary>
-        /// A unique identifier for the order.
-        /// </summary>
-        public int OrderNumber { get; set; }
+        // Order properties to store basic information
+        public int OrderNumber { get; }  // Unique identifier for the order
+        public DateTime DateTime { get; }  // When the order was placed
+        public string CustomerName { get; }  // Customer's full name
+        public string CustomerPhone { get; }  // Customer's contact number
+
+        // Computed amounts for the order
+        public decimal TaxAmount { get; private set; }  // 10% tax on total
+        public decimal TariffAmount { get; private set; }  // Additional 5% for electronics
+        public decimal TotalAmount { get; private set; }  // Final total amount
+
+        // Stores all the items in the order
+        public List<OrderDetail> OrderDetails { get; } = new List<OrderDetail>();
+
+        private int _nextDetailNumber = 1;  // Keeps track of detail numbers (increments automatically)
 
         /// <summary>
-        /// The date and time when the order was created.
+        /// Initializes a new order with basic information.
+        /// Ensures that customer name and phone number are not empty.
         /// </summary>
-        public DateTime DateTime { get; set; }
-
-        /// <summary>
-        /// The customer's name.
-        /// </summary>
-        public string CustomerName { get; set; }
-
-        /// <summary>
-        /// The customer's phone number.
-        /// </summary>
-        public string CustomerPhone { get; set; }
-
-        /// <summary>
-        /// The total tax amount for the order. Calculated as 10% of the order's total item cost.
-        /// </summary>
-        public decimal TaxAmount { get; set; }
-
-        /// <summary>
-        /// The total tariff amount applied to electronic items in the order.
-        /// A 5% tariff is applied to items with Stock_IDs starting with "ELECT".
-        /// </summary>
-        public decimal TariffAmount { get; set; }
-
-        /// <summary>
-        /// The overall total amount for the order, including tax and tariffs.
-        /// </summary>
-        public decimal TotalAmount { get; set; }
-
-        /// <summary>
-        /// A list of all the items purchased in this order.
-        /// </summary>
-        public List<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
-
-        /// <summary>
-        /// Initializes a new order with basic information like the order number, 
-        /// date/time, customer's name, and phone number.
-        /// </summary>
-        /// <param name="orderNumber">The unique order number.</param>
-        /// <param name="dateTime">The date and time of the order.</param>
-        /// <param name="customerName">The name of the customer placing the order.</param>
-        /// <param name="customerPhone">The phone number of the customer.</param>
         public Order(int orderNumber, DateTime dateTime, string customerName, string customerPhone)
         {
+            // Validate customer name and phone - avoid empty or null values
+            if (string.IsNullOrWhiteSpace(customerName))
+                throw new ArgumentException("Customer name cannot be empty.", nameof(customerName));
+
+            if (string.IsNullOrWhiteSpace(customerPhone))
+                throw new ArgumentException("Customer phone cannot be empty.", nameof(customerPhone));
+
             OrderNumber = orderNumber;
             DateTime = dateTime;
             CustomerName = customerName;
@@ -70,37 +48,47 @@ namespace OrderClassLibrary
         }
 
         /// <summary>
-        /// Adds a new detail item to the order, representing a purchased product.
+        /// Adds an item (OrderDetail) to the order.
+        /// Automatically assigns a detail number to the new item.
         /// </summary>
-        /// <param name="detail">The detail item to add to the order.</param>
         public void AddDetail(OrderDetail detail)
         {
+            // If the detail is null, throw an error (we can't process a null item)
+            if (detail == null)
+                throw new ArgumentNullException(nameof(detail), "Order detail cannot be null.");
+
+            // Automatically assign the next available detail number
+            detail.SetDetailNumber(_nextDetailNumber++);
             OrderDetails.Add(detail);
         }
 
         /// <summary>
-        /// Calculates the total cost of the order. 
-        /// This includes summing up the cost of all items, adding a 10% tax, 
-        /// and applying a 5% tariff to electronic items.
+        /// Calculates the total cost, tax, and tariffs for the order.
+        /// This includes a 10% tax on the total amount and a 5% tariff on electronics.
         /// </summary>
         public void CalculateTotal()
         {
-            // Sum up the total cost of all the order's items
+            // Sum up the total cost of all the order details (without tax or tariffs)
             decimal totalDetailsAmount = OrderDetails.Sum(detail => detail.CalculateItemTotal());
 
-            // Calculate the tax (10% of the item total)
-            TaxAmount = totalDetailsAmount * 0.10m;
+            // Calculate 10% tax on the total amount
+            TaxAmount = Math.Round(totalDetailsAmount * 0.10m, 2);
 
-            // Calculate the tariff for electronic items (5%)
-            TariffAmount = OrderDetails
-                .Where(detail => detail.Stock_ID.StartsWith("ELECT"))
-                .Sum(detail => detail.CalculateItemTotal() * 0.05m);
+            // Add 5% tariff for items starting with "ELECT" (electronics)
+            TariffAmount = Math.Round(OrderDetails
+                .Where(detail => detail.Stock_ID.StartsWith("ELECT", StringComparison.OrdinalIgnoreCase))
+                .Sum(detail => detail.CalculateItemTotal() * 0.05m), 2);
 
-            // Update the total amount (items + tax + tariff)
-            TotalAmount = totalDetailsAmount + TaxAmount + TariffAmount;
+            // Calculate the final total (sum of base amount, tax, and tariffs)
+            TotalAmount = Math.Round(totalDetailsAmount + TaxAmount + TariffAmount, 2);
         }
     }
 }
+
+
+
+
+
 
 
 

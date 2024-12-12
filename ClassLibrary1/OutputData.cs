@@ -1,72 +1,73 @@
 /*
  * Programmer: Dechen Deng
- * Date/ 11/25/2024
- * Reversion History: 1.0
- * Plateform: Windows11 Rider
+ * Date: 12/11/2024
+ * Revision History: Final
+ * Platform: Windows11 Rider
  */
+using System;
+using System.Text.Json;
+using System.IO;
 
 namespace OrderClassLibrary
 {
     /// <summary>
-    /// Represents a general output mechanism for orders. Classes that implement this interface
-    /// need to define how an order is written to a specific storage medium, such as a database or file.
+    /// Interface for saving order data to different output formats.
+    /// Helps in writing order details to a database or a file.
     /// </summary>
-    public interface OutputData
+    public interface IOutputData
     {
         /// <summary>
-        /// Writes the provided order to a specific output destination.
+        /// Writes the order details to the chosen output format.
         /// </summary>
-        /// <param name="order">The order to be written.</param>
         void Write(Order order);
     }
 
     /// <summary>
-    /// Handles writing orders to a MySQL database.
+    /// Implementation for saving order data to a simulated MySQL database.
     /// </summary>
-    public class MYSQL : OutputData
+    public class MYSQL : IOutputData
     {
         /// <summary>
-        /// Simulates writing the order and its details to a MySQL database.
-        /// Outputs all the order and order detail information to the console as a placeholder.
+        /// Simulates writing the order to a MySQL database.
+        /// This implementation simply prints the order details to the console.
         /// </summary>
-        /// <param name="order">The order to be written to the database.</param>
+        /// <param name="order">The order to be saved.</param>
         public void Write(Order order)
         {
+            // In a real implementation, this would connect to a MySQL database.
             Console.WriteLine($"[MYSQL] Writing order {order.OrderNumber} to database...");
-            Console.WriteLine($"[MYSQL] Order Data: {order.OrderNumber}, {order.DateTime}, {order.CustomerName}, {order.CustomerPhone}, Tax: {order.TaxAmount}, Tariff: {order.TariffAmount}, Total: {order.TotalAmount}");
-            
-            foreach (var detail in order.OrderDetails)
-            {
-                Console.WriteLine($"[MYSQL] Detail Data: {detail.OrderNumber}, {detail.DetailNumber}, {detail.Stock_ID}, {detail.StockName}, {detail.StockPrice}, {detail.Quantity}, Total: {detail.CalculateItemTotal()}");
-            }
+            Console.WriteLine($"Order Data: {order.OrderNumber}, {order.DateTime}, {order.CustomerName}, {order.CustomerPhone}, Tax: {order.TaxAmount}, Tariff: {order.TariffAmount}, Total: {order.TotalAmount}");
         }
     }
 
     /// <summary>
-    /// Handles writing orders to a JSON file.
+    /// Implementation for saving order data to a JSON file.
     /// </summary>
-    public class JSON : OutputData
+    public class JSON : IOutputData
     {
         /// <summary>
-        /// Writes the order and its details to a JSON file. The file is saved locally 
-        /// with the name "Order_{OrderNumber}.json".
+        /// Saves the order details to a JSON file.
+        /// This file is created in the current directory with the order number in the file name.
         /// </summary>
-        /// <param name="order">The order to be written to a JSON file.</param>
+        /// <param name="order">The order to be saved.</param>
         public void Write(Order order)
         {
-            Console.WriteLine($"[JSON] Writing order {order.OrderNumber} to JSON file...");
-
-            // Generate file path
+            // Create a JSON file named after the order number
             string filePath = $"Order_{order.OrderNumber}.json";
 
-            // Serialize the order to a JSON string with indentation for readability
-            var options = new System.Text.Json.JsonSerializerOptions { WriteIndented = true };
-            string jsonString = System.Text.Json.JsonSerializer.Serialize(order, options);
+            // Configure JSON options for readable formatting
+            var options = new JsonSerializerOptions { WriteIndented = true };
+
+            // Serialize the order object into a JSON string
+            string jsonString = JsonSerializer.Serialize(order, options);
 
             // Write the JSON string to the file
-            System.IO.File.WriteAllText(filePath, jsonString);
+            File.WriteAllText(filePath, jsonString);
 
-            Console.WriteLine($"[JSON] Order {order.OrderNumber} successfully written to file: {filePath}");
+            // Notify the user that the file has been created
+            Console.WriteLine($"Order {order.OrderNumber} written to {filePath}");
         }
     }
 }
+
+

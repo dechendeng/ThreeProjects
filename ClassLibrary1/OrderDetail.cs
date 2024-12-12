@@ -1,65 +1,44 @@
 /*
  * Programmer: Dechen Deng
- * Date/ 11/25/2024
- * Reversion History: 1.0
- * Plateform: Windows11 Rider
+ * Date: 12/11/2024
+ * Revision History: Final
+ * Platform: Windows11 Rider
  */
+using System;
+
 namespace OrderClassLibrary
 {
-    /// <summary>
-    /// Represents a single item in an order, including product details and the quantity purchased.
-    /// </summary>
     public class OrderDetail
     {
-        /// <summary>
-        /// The order number this item belongs to.
-        /// </summary>
-        public int OrderNumber { get; set; }
+        // Order number this detail belongs to
+        public int OrderNumber { get; }
 
-        /// <summary>
-        /// A unique number identifying this specific item within the order.
-        /// This number starts at 1 and increments automatically for each new item.
-        /// </summary>
-        public int DetailNumber { get; set; }
+        // A unique identifier for this specific detail in the order
+        public int DetailNumber { get; private set; }
 
-        /// <summary>
-        /// The stock ID of the product being purchased, such as a product code or SKU.
-        /// </summary>
-        public string Stock_ID { get; set; }
+        // The unique stock identifier (e.g., "ELECT001")
+        public string Stock_ID { get; }
 
-        /// <summary>
-        /// The name of the product being purchased.
-        /// </summary>
-        public string StockName { get; set; }
+        // The name of the stock item (e.g., "42 Inch TV")
+        public string StockName { get; }
 
-        /// <summary>
-        /// The price of a single unit of the product.
-        /// </summary>
-        public decimal StockPrice { get; set; }
+        // The price of a single unit of this stock item
+        public decimal StockPrice { get; }
 
-        /// <summary>
-        /// The quantity of this product that was purchased.
-        /// </summary>
+        // The number of units purchased for this item
         public int Quantity { get; set; }
 
         /// <summary>
-        /// Keeps track of the detail number for each new item, ensuring it increments automatically.
+        /// Initializes an OrderDetail object with required information.
+        /// Ensures price and quantity are non-negative.
         /// </summary>
-        private static int _detailCounter = 1;
-
-        /// <summary>
-        /// Creates a new order detail, specifying the product and its details.
-        /// Automatically assigns a unique detail number to this item.
-        /// </summary>
-        /// <param name="orderNumber">The order number this item belongs to.</param>
-        /// <param name="stockID">The stock ID of the product.</param>
-        /// <param name="stockName">The name of the product.</param>
-        /// <param name="stockPrice">The price of a single unit of the product.</param>
-        /// <param name="quantity">The quantity of the product purchased.</param>
         public OrderDetail(int orderNumber, string stockID, string stockName, decimal stockPrice, int quantity)
         {
+            // Make sure stock price and quantity aren't negative
+            if (stockPrice < 0 || quantity < 0)
+                throw new ArgumentException("Stock price and quantity must be non-negative.");
+
             OrderNumber = orderNumber;
-            DetailNumber = _detailCounter++;
             Stock_ID = stockID;
             StockName = stockName;
             StockPrice = stockPrice;
@@ -67,14 +46,29 @@ namespace OrderClassLibrary
         }
 
         /// <summary>
-        /// Calculates the total cost for this item by multiplying the unit price by the quantity.
+        /// Sets the detail number for this item.
+        /// This is typically assigned by the Order class when the item is added.
         /// </summary>
-        /// <returns>The total cost of this item in the order.</returns>
+        public void SetDetailNumber(int detailNumber)
+        {
+            DetailNumber = detailNumber;
+        }
+
+        /// <summary>
+        /// Calculates the total price for this item.
+        /// Multiplies the unit price by the quantity purchased.
+        /// </summary>
         public decimal CalculateItemTotal()
         {
             return StockPrice * Quantity;
         }
     }
 }
+
+
+
+
+
+
 
 
